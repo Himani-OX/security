@@ -1,0 +1,27 @@
+
+server:
+  port: 8090
+
+spring:
+  application:
+    name: springSecurity
+
+  security:
+    user:
+      name: himani
+      password: himani
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/spring_security?serverTimezone=UTC
+    username: root
+    password: Admin@123
+
+  jpa:
+#    properties:
+#      hibernate:
+#        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+
+    hibernate:
+      ddl-auto: update
+
+    show-sql: true
