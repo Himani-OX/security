@@ -13,4 +13,10 @@ public class HomeController {
     public String homePage(HttpServletRequest httpServletRequest){
         return "Welcome to home page, this is a session id " + httpServletRequest.getRequestedSessionId();
     }
+
+    //login controller
+
+    //sign up controller
+
+
 }
