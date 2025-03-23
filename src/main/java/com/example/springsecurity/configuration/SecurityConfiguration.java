@@ -11,6 +11,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,29 +27,42 @@ public class SecurityConfiguration {
     @Autowired
     UserDetailsService userService;
 
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
     @Bean
     public SecurityFilterChain getAuthenticationConfiguration(HttpSecurity httpSecurity) throws Exception{
         return httpSecurity
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(Urls.BASE_URL + Urls.VERSION + Urls.LOGIN ,
-                                                Urls.BASE_URL + Urls.VERSION + Urls.SIGNUP).permitAll()
-                        .anyRequest().authenticated()
-                        )
-                .formLogin(Customizer.withDefaults())
-                .httpBasic(Customizer.withDefaults())
+                        .requestMatchers( Urls.LOGIN , "/custom-login",
+                                                 Urls.SIGNUP)
+                        .permitAll()
+                        .anyRequest().authenticated())
+                .csrf(httpSecurityCsrfConfigurer -> httpSecurityCsrfConfigurer.disable())
+                .formLogin(form -> form
+                        .loginPage("/custom-login")  // Custom login page URL
+                        .loginProcessingUrl("/perform_login")  // Form action
+                        .defaultSuccessUrl("/home", true)  // Redirect after success
+                        .failureUrl("/login?error")  // Redirect after failure
+                        .permitAll()
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID"))
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                        .maximumSessions(1)
+                        .expiredUrl("/login?expired"))
                 .build();
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder(){
-        return new BCryptPasswordEncoder();
     }
 
     @Bean
     public DaoAuthenticationProvider daoAuthenticationProvider(){
         DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
         daoAuthenticationProvider.setUserDetailsService(userService);
-        daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
+        daoAuthenticationProvider.setPasswordEncoder(passwordEncoder);
         return daoAuthenticationProvider;
     }
 
